@@ -3,6 +3,9 @@ import { prisma } from "@/lib/prisma";
 import { isAdminAuthenticated } from "@/lib/auth";
 
 export async function GET() {
+  if (!(await isAdminAuthenticated())) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
   const requests = await prisma.productRequest.findMany({
     orderBy: { createdAt: "desc" },
   });
