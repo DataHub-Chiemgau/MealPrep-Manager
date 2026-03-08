@@ -144,32 +144,35 @@ fi
 # =============================================================================
 info "Installing all npm dependencies (including devDependencies for build)..."
 cd "${APP_DIR}"
-sudo -u "${APP_USER}" npm ci
+sudo -H -u "${APP_USER}" npm ci
 
 info "Generating Prisma client..."
-sudo -u "${APP_USER}" npx prisma generate
+sudo -H -u "${APP_USER}" npx prisma generate
 
 info "Running database migrations..."
-sudo -u "${APP_USER}" npx prisma migrate deploy
+sudo -H -u "${APP_USER}" npx prisma migrate deploy
 
 info "Building Next.js application..."
-sudo -u "${APP_USER}" npm run build
+sudo -H -u "${APP_USER}" npm run build
 
 info "Pruning development dependencies..."
-sudo -u "${APP_USER}" npm ci --omit=dev
+sudo -H -u "${APP_USER}" npm ci --omit=dev
+
+info "Re-generating Prisma client for production..."
+sudo -H -u "${APP_USER}" npx prisma generate
 
 # =============================================================================
 # 8. PM2 – start / restart app as dedicated user and set up autostart
 # =============================================================================
 info "Starting application with PM2 as user '${APP_USER}'..."
-sudo -u "${APP_USER}" pm2 delete "${PM2_APP_NAME}" 2>/dev/null || true
-sudo -u "${APP_USER}" pm2 start npm \
+sudo -H -u "${APP_USER}" pm2 delete "${PM2_APP_NAME}" 2>/dev/null || true
+sudo -H -u "${APP_USER}" pm2 start npm \
   --name "${PM2_APP_NAME}" \
   --cwd "${APP_DIR}" \
   -- start
 
 info "Saving PM2 process list..."
-sudo -u "${APP_USER}" pm2 save
+sudo -H -u "${APP_USER}" pm2 save
 
 info "Configuring PM2 systemd startup for user '${APP_USER}'..."
 APP_USER_HOME="$(getent passwd "${APP_USER}" | cut -d: -f6)"
