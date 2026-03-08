@@ -105,10 +105,38 @@ chown -R "${APP_USER}:${APP_USER}" "${APP_DIR}"
 # 6. Environment file
 # =============================================================================
 if [[ ! -f "${APP_DIR}/.env" ]]; then
-  warn ".env file not found – copying from .env.example."
-  warn "Make sure to set strong ADMIN_PASSWORD and SHOP_PIN in .env before going live!"
+  info "Creating .env from template..."
   cp "${APP_DIR}/.env.example" "${APP_DIR}/.env"
   chown "${APP_USER}:${APP_USER}" "${APP_DIR}/.env"
+
+  # ── Interactive configuration ─────────────────────────────────────────────
+  echo ""
+  echo -e "${YELLOW}──────────────────────────────────────────────────────────${NC}"
+  echo -e "${YELLOW}  Initial configuration required                         ${NC}"
+  echo -e "${YELLOW}──────────────────────────────────────────────────────────${NC}"
+  echo ""
+  echo "  Please set the admin password and shop PIN."
+  echo "  (Press Enter to keep the default value shown in brackets.)"
+  echo ""
+
+  # Read ADMIN_PASSWORD
+  read -rp "  Admin password [changeme]: " INPUT_ADMIN_PW
+  INPUT_ADMIN_PW="${INPUT_ADMIN_PW:-changeme}"
+
+  # Read SHOP_PIN
+  read -rp "  Shop PIN        [1234]:    " INPUT_SHOP_PIN
+  INPUT_SHOP_PIN="${INPUT_SHOP_PIN:-1234}"
+
+  # Write values into .env
+  sed -i "s|^ADMIN_PASSWORD=.*|ADMIN_PASSWORD=${INPUT_ADMIN_PW}|" "${APP_DIR}/.env"
+  sed -i "s|^SHOP_PIN=.*|SHOP_PIN=${INPUT_SHOP_PIN}|" "${APP_DIR}/.env"
+
+  echo ""
+  info "Configuration saved to ${APP_DIR}/.env"
+
+  if [[ "${INPUT_ADMIN_PW}" == "changeme" || "${INPUT_SHOP_PIN}" == "1234" ]]; then
+    warn "You are using default credentials. Change them before going live!"
+  fi
 fi
 
 # =============================================================================
