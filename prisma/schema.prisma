@@ -1,0 +1,96 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model BaseIngredient {
+  id               Int                  @id @default(autoincrement())
+  name             String               @unique
+  unit             String               // e.g. "g", "ml", "Stück", "Portion"
+  pricePerUnit     Float                @default(0)
+  stockQuantity    Float                @default(0)
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+  recipeIngredients RecipeIngredient[]
+  shoppingListItems ShoppingListItem[]
+}
+
+model Recipe {
+  id               Int                  @id @default(autoincrement())
+  name             String
+  description      String?
+  servings         Int                  @default(4)
+  instructions     String?
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+  ingredients      RecipeIngredient[]
+  weekPlanEntries  WeekPlanEntry[]
+  finishedProducts FinishedProduct[]
+}
+
+model RecipeIngredient {
+  id           Int            @id @default(autoincrement())
+  recipe       Recipe         @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  recipeId     Int
+  ingredient   BaseIngredient @relation(fields: [ingredientId], references: [id])
+  ingredientId Int
+  quantity     Float
+}
+
+model WeekPlanEntry {
+  id         Int      @id @default(autoincrement())
+  weekStart  String   // ISO date string of the Monday, e.g. "2024-01-01"
+  dayOfWeek  Int      // 0=Mon … 6=Sun
+  mealSlot   String   // e.g. "Mittagessen", "Abendessen"
+  recipe     Recipe   @relation(fields: [recipeId], references: [id])
+  recipeId   Int
+  createdAt  DateTime @default(now())
+}
+
+model ShoppingListItem {
+  id               Int            @id @default(autoincrement())
+  ingredient       BaseIngredient @relation(fields: [ingredientId], references: [id])
+  ingredientId     Int
+  requiredQuantity Float
+  checkedOff       Boolean        @default(false)
+  weekStart        String
+  createdAt        DateTime       @default(now())
+}
+
+model FinishedProduct {
+  id               Int             @id @default(autoincrement())
+  recipe           Recipe          @relation(fields: [recipeId], references: [id])
+  recipeId         Int
+  name             String
+  portionsTotal    Int
+  portionsRemaining Int
+  storageType      String          // "FRIDGE" | "FREEZER"
+  bestBefore       DateTime
+  pricePerPortion  Float
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  purchaseItems    PurchaseItem[]
+}
+
+model PurchaseItem {
+  id                Int             @id @default(autoincrement())
+  finishedProduct   FinishedProduct @relation(fields: [finishedProductId], references: [id])
+  finishedProductId Int
+  quantity          Int
+  totalPrice        Float
+  createdAt         DateTime        @default(now())
+}
+
+model ProductRequest {
+  id          Int      @id @default(autoincrement())
+  productName String
+  message     String?
+  createdAt   DateTime @default(now())
+  handled     Boolean  @default(false)
+}
