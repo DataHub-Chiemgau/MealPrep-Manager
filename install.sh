@@ -120,11 +120,13 @@ if [[ ! -f "${APP_DIR}/.env" ]]; then
   echo ""
 
   # Read ADMIN_PASSWORD
-  read -rp "  Admin password [changeme]: " INPUT_ADMIN_PW
+  read -rsp "  Admin password [changeme]: " INPUT_ADMIN_PW
+  echo ""
   INPUT_ADMIN_PW="${INPUT_ADMIN_PW:-changeme}"
 
   # Read SHOP_PIN
-  read -rp "  Shop PIN        [1234]:    " INPUT_SHOP_PIN
+  read -rsp "  Shop PIN        [1234]:    " INPUT_SHOP_PIN
+  echo ""
   INPUT_SHOP_PIN="${INPUT_SHOP_PIN:-1234}"
 
   # Write values into .env
