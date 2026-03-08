@@ -6,7 +6,8 @@
 # =============================================================================
 set -euo pipefail
 
-APP_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SOURCE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+DEPLOY_DIR="/opt/mealprep-manager"
 APP_PORT=3000
 NGINX_SITE="mealprep-manager"
 PM2_APP_NAME="mealprep-manager"
@@ -42,6 +43,7 @@ DEBIAN_FRONTEND=noninteractive apt-get install -y \
   gnupg \
   lsb-release \
   nginx \
+  rsync \
   ufw \
   tesseract-ocr \
   tesseract-ocr-deu
@@ -79,6 +81,23 @@ if ! id "${APP_USER}" &>/dev/null; then
   useradd --system --shell /bin/bash --create-home "${APP_USER}"
 fi
 
+# =============================================================================
+# 5b. Copy application to deployment directory
+# =============================================================================
+# The source directory may live under /root or another restricted path that the
+# dedicated user cannot traverse. Copy everything to a standard location that
+# the application user can access.
+if [[ "${SOURCE_DIR}" != "${DEPLOY_DIR}" ]]; then
+  info "Copying application to ${DEPLOY_DIR}..."
+  mkdir -p "${DEPLOY_DIR}"
+  rsync -a --delete \
+    --exclude node_modules --exclude .next --exclude .git \
+    --exclude .env --exclude '*.db' --exclude '*.db-journal' \
+    "${SOURCE_DIR}/" "${DEPLOY_DIR}/"
+fi
+
+APP_DIR="${DEPLOY_DIR}"
+
 # Ensure the application directory is owned by the app user
 chown -R "${APP_USER}:${APP_USER}" "${APP_DIR}"
 
@@ -88,7 +107,8 @@ chown -R "${APP_USER}:${APP_USER}" "${APP_DIR}"
 if [[ ! -f "${APP_DIR}/.env" ]]; then
   warn ".env file not found – copying from .env.example."
   warn "Make sure to set strong ADMIN_PASSWORD and SHOP_PIN in .env before going live!"
-  sudo -u "${APP_USER}" cp "${APP_DIR}/.env.example" "${APP_DIR}/.env"
+  cp "${APP_DIR}/.env.example" "${APP_DIR}/.env"
+  chown "${APP_USER}:${APP_USER}" "${APP_DIR}/.env"
 fi
 
 # =============================================================================
