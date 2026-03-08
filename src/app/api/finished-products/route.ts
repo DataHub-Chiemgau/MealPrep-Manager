@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
   if (!(await isAdminAuthenticated())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  const { recipeId, name, portionsTotal, storageType, bestBefore } = await req.json();
+  const { recipeId, name, category, portionsTotal, storageType, bestBefore, freezerInstructions, vacuumInstructions } = await req.json();
   if (!recipeId || !name || !portionsTotal || !storageType || !bestBefore) {
     return NextResponse.json({ error: "Alle Felder sind Pflicht" }, { status: 400 });
   }
@@ -48,11 +48,14 @@ export async function POST(req: NextRequest) {
     data: {
       recipeId: Number(recipeId),
       name,
+      category: category || null,
       portionsTotal: Number(portionsTotal),
       portionsRemaining: Number(portionsTotal),
       storageType,
       bestBefore: new Date(bestBefore),
       pricePerPortion,
+      freezerInstructions: freezerInstructions || null,
+      vacuumInstructions: vacuumInstructions || null,
     },
     include: { recipe: true },
   });

@@ -17,7 +17,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const { id } = await params;
-  const { name, description, servings, instructions, ingredients } = await req.json();
+  const { name, description, category, servings, prepTime, totalTime, instructions, ingredients } = await req.json();
   // Delete existing ingredients and recreate
   await prisma.recipeIngredient.deleteMany({ where: { recipeId: Number(id) } });
   const recipe = await prisma.recipe.update({
@@ -25,7 +25,10 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     data: {
       name,
       description,
+      category: category || null,
       servings: Number(servings),
+      prepTime: prepTime ? Number(prepTime) : null,
+      totalTime: totalTime ? Number(totalTime) : null,
       instructions,
       ingredients: {
         create: (ingredients ?? []).map((i: { ingredientId: number; quantity: number }) => ({

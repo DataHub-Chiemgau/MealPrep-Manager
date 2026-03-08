@@ -5,20 +5,35 @@ interface BaseIngredient {
   id: number;
   name: string;
   unit: string;
+  category: string | null;
   pricePerUnit: number;
   stockQuantity: number;
 }
 
 const UNITS = ["g", "kg", "ml", "l", "Stück", "Portion", "EL", "TL", "Prise", "Packung"];
+const INGREDIENT_CATEGORIES = [
+  "Gemüse",
+  "Obst",
+  "Fleisch",
+  "Fisch",
+  "Milchprodukte",
+  "Getreide",
+  "Gewürze",
+  "Öle & Fette",
+  "Konserven",
+  "Tiefkühl",
+  "Sonstiges",
+];
 
 export default function IngredientsPage() {
   const [ingredients, setIngredients] = useState<BaseIngredient[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
-  const [form, setForm] = useState({ name: "", unit: "g", pricePerUnit: 0, stockQuantity: 0 });
+  const [form, setForm] = useState({ name: "", unit: "g", category: "", pricePerUnit: 0, stockQuantity: 0 });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [search, setSearch] = useState("");
 
   async function load() {
     const res = await fetch("/api/ingredients");
@@ -30,14 +45,14 @@ export default function IngredientsPage() {
 
   function openNew() {
     setEditId(null);
-    setForm({ name: "", unit: "g", pricePerUnit: 0, stockQuantity: 0 });
+    setForm({ name: "", unit: "g", category: "", pricePerUnit: 0, stockQuantity: 0 });
     setShowForm(true);
     setError("");
   }
 
   function openEdit(ing: BaseIngredient) {
     setEditId(ing.id);
-    setForm({ name: ing.name, unit: ing.unit, pricePerUnit: ing.pricePerUnit, stockQuantity: ing.stockQuantity });
+    setForm({ name: ing.name, unit: ing.unit, category: ing.category ?? "", pricePerUnit: ing.pricePerUnit, stockQuantity: ing.stockQuantity });
     setShowForm(true);
     setError("");
   }
@@ -86,6 +101,17 @@ export default function IngredientsPage() {
         </button>
       </div>
 
+      {/* Search */}
+      <div>
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Zutaten suchen..."
+          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+        />
+      </div>
+
       {/* Form */}
       {showForm && (
         <div className="bg-white rounded-xl border border-gray-200 p-5">
@@ -111,6 +137,17 @@ export default function IngredientsPage() {
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
               >
                 {UNITS.map((u) => <option key={u} value={u}>{u}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Kategorie</label>
+              <select
+                value={form.category}
+                onChange={(e) => setForm({ ...form, category: e.target.value })}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              >
+                <option value="">Keine Kategorie</option>
+                {INGREDIENT_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
               </select>
             </div>
             <div>
@@ -169,6 +206,7 @@ export default function IngredientsPage() {
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
                 <th className="text-left px-4 py-3 text-gray-600 font-medium">Name</th>
+                <th className="text-left px-4 py-3 text-gray-600 font-medium">Kategorie</th>
                 <th className="text-left px-4 py-3 text-gray-600 font-medium">Einheit</th>
                 <th className="text-right px-4 py-3 text-gray-600 font-medium">Preis/E</th>
                 <th className="text-right px-4 py-3 text-gray-600 font-medium">Bestand</th>
@@ -176,9 +214,24 @@ export default function IngredientsPage() {
               </tr>
             </thead>
             <tbody>
-              {ingredients.map((ing, i) => (
+              {ingredients
+                .filter((ing) => {
+                  const q = search.toLowerCase();
+                  return (
+                    ing.name.toLowerCase().includes(q) ||
+                    (ing.category?.toLowerCase().includes(q) ?? false)
+                  );
+                })
+                .map((ing, i) => (
                 <tr key={ing.id} className={i % 2 === 0 ? "" : "bg-gray-50"}>
                   <td className="px-4 py-3 font-medium text-gray-800">{ing.name}</td>
+                  <td className="px-4 py-3 text-gray-500">
+                    {ing.category ? (
+                      <span className="inline-block text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">{ing.category}</span>
+                    ) : (
+                      <span className="text-gray-300">–</span>
+                    )}
+                  </td>
                   <td className="px-4 py-3 text-gray-500">{ing.unit}</td>
                   <td className="px-4 py-3 text-right">€{ing.pricePerUnit.toFixed(3)}</td>
                   <td className="px-4 py-3 text-right">

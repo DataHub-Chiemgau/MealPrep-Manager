@@ -21,6 +21,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       data: {
         name: data.name,
         unit: data.unit,
+        category: data.category || null,
         pricePerUnit: data.pricePerUnit,
         stockQuantity: data.stockQuantity,
       },

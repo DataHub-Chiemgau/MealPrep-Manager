@@ -24,3 +24,14 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Ensure input text is clearly visible */
+input,
+select,
+textarea {
+  color: #111827; /* gray-900 */
+}
+input::placeholder,
+textarea::placeholder {
+  color: #9ca3af; /* gray-400 */
+}
