@@ -83,7 +83,16 @@ fi
 chown -R "${APP_USER}:${APP_USER}" "${APP_DIR}"
 
 # =============================================================================
-# 6. Application dependencies & build
+# 6. Environment file
+# =============================================================================
+if [[ ! -f "${APP_DIR}/.env" ]]; then
+  warn ".env file not found – copying from .env.example."
+  warn "Make sure to set strong ADMIN_PASSWORD and SHOP_PIN in .env before going live!"
+  sudo -u "${APP_USER}" cp "${APP_DIR}/.env.example" "${APP_DIR}/.env"
+fi
+
+# =============================================================================
+# 7. Application dependencies & build
 # =============================================================================
 info "Installing all npm dependencies (including devDependencies for build)..."
 cd "${APP_DIR}"
@@ -100,15 +109,6 @@ sudo -u "${APP_USER}" npm run build
 
 info "Pruning development dependencies..."
 sudo -u "${APP_USER}" npm ci --omit=dev
-
-# =============================================================================
-# 7. Environment file
-# =============================================================================
-if [[ ! -f "${APP_DIR}/.env" ]]; then
-  warn ".env file not found – copying from .env.example."
-  warn "Make sure to set strong ADMIN_PASSWORD and SHOP_PIN in .env before going live!"
-  sudo -u "${APP_USER}" cp "${APP_DIR}/.env.example" "${APP_DIR}/.env"
-fi
 
 # =============================================================================
 # 8. PM2 – start / restart app as dedicated user and set up autostart
