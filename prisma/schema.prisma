@@ -13,6 +13,7 @@ model BaseIngredient {
   id               Int                  @id @default(autoincrement())
   name             String               @unique
   unit             String               // e.g. "g", "ml", "Stück", "Portion"
+  category         String?              // e.g. "Gemüse", "Fleisch", "Gewürze"
   pricePerUnit     Float                @default(0)
   stockQuantity    Float                @default(0)
   createdAt        DateTime             @default(now())
@@ -25,7 +26,10 @@ model Recipe {
   id               Int                  @id @default(autoincrement())
   name             String
   description      String?
+  category         String?              // e.g. "Hauptgericht", "Beilage", "Suppe"
   servings         Int                  @default(4)
+  prepTime         Int?                 // Arbeitszeit in Minuten
+  totalTime        Int?                 // Gesamtzeit in Minuten
   instructions     String?
   createdAt        DateTime             @default(now())
   updatedAt        DateTime             @updatedAt
@@ -68,11 +72,14 @@ model FinishedProduct {
   recipe           Recipe          @relation(fields: [recipeId], references: [id])
   recipeId         Int
   name             String
+  category         String?         // e.g. "Hauptgericht", "Beilage", "Suppe"
   portionsTotal    Int
   portionsRemaining Int
   storageType      String          // "FRIDGE" | "FREEZER"
   bestBefore       DateTime
   pricePerPortion  Float
+  freezerInstructions  String?     // Anleitung zur TK-Nutzung
+  vacuumInstructions   String?     // Anleitung zur Vakuumierung
   createdAt        DateTime        @default(now())
   updatedAt        DateTime        @updatedAt
   purchaseItems    PurchaseItem[]

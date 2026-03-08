@@ -26,7 +26,10 @@ export default async function EditRecipePage({ params }: { params: Promise<{ id:
           id: recipe.id,
           name: recipe.name,
           description: recipe.description ?? "",
+          category: recipe.category ?? "",
           servings: recipe.servings,
+          prepTime: recipe.prepTime,
+          totalTime: recipe.totalTime,
           instructions: recipe.instructions ?? "",
           ingredients: recipe.ingredients.map((ri) => ({
             ingredientId: ri.ingredientId,

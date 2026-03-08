@@ -5,16 +5,32 @@ interface Recipe {
   id: number;
   name: string;
   servings: number;
+  category?: string | null;
 }
+
+const PRODUCT_CATEGORIES = [
+  "Hauptgericht",
+  "Beilage",
+  "Suppe",
+  "Salat",
+  "Dessert",
+  "Snack",
+  "Frühstück",
+  "Getränk",
+  "Sonstiges",
+];
 
 interface FinishedProduct {
   id: number;
   name: string;
+  category: string | null;
   portionsTotal: number;
   portionsRemaining: number;
   storageType: string;
   bestBefore: string;
   pricePerPortion: number;
+  freezerInstructions: string | null;
+  vacuumInstructions: string | null;
   recipe: Recipe;
 }
 
@@ -28,9 +44,12 @@ export default function InventoryPage() {
   const [form, setForm] = useState({
     recipeId: "",
     name: "",
+    category: "",
     portionsTotal: 4,
     storageType: "FRIDGE",
     bestBefore: "",
+    freezerInstructions: "",
+    vacuumInstructions: "",
   });
 
   async function load() {
@@ -56,7 +75,7 @@ export default function InventoryPage() {
     });
     if (res.ok) {
       setShowForm(false);
-      setForm({ recipeId: "", name: "", portionsTotal: 4, storageType: "FRIDGE", bestBefore: "" });
+      setForm({ recipeId: "", name: "", category: "", portionsTotal: 4, storageType: "FRIDGE", bestBefore: "", freezerInstructions: "", vacuumInstructions: "" });
       load();
     } else {
       const data = await res.json();
@@ -107,6 +126,7 @@ export default function InventoryPage() {
                     ...form,
                     recipeId: e.target.value,
                     name: recipe?.name ?? "",
+                    category: recipe?.category ?? "",
                     portionsTotal: recipe?.servings ?? 4,
                   });
                 }}
@@ -151,6 +171,17 @@ export default function InventoryPage() {
                 <option value="FREEZER">❄️ Tiefkühlung</option>
               </select>
             </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Kategorie</label>
+              <select
+                value={form.category}
+                onChange={(e) => setForm({ ...form, category: e.target.value })}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              >
+                <option value="">Keine Kategorie</option>
+                {PRODUCT_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
             <div className="sm:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-1">MHD *</label>
               <input
@@ -159,6 +190,26 @@ export default function InventoryPage() {
                 onChange={(e) => setForm({ ...form, bestBefore: e.target.value })}
                 required
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              />
+            </div>
+            <div className="sm:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">TK-Anleitung</label>
+              <textarea
+                value={form.freezerInstructions}
+                onChange={(e) => setForm({ ...form, freezerInstructions: e.target.value })}
+                rows={2}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                placeholder="Anleitung zur Tiefkühl-Nutzung..."
+              />
+            </div>
+            <div className="sm:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Vakuum-Anleitung</label>
+              <textarea
+                value={form.vacuumInstructions}
+                onChange={(e) => setForm({ ...form, vacuumInstructions: e.target.value })}
+                rows={2}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                placeholder="Anleitung zur Vakuumierung..."
               />
             </div>
             {error && <p className="sm:col-span-2 text-red-500 text-sm">{error}</p>}
@@ -202,6 +253,11 @@ export default function InventoryPage() {
                   <h3 className="font-semibold text-gray-800">{p.name}</h3>
                   <span className="text-xl">{p.storageType === "FREEZER" ? "❄️" : "🧊"}</span>
                 </div>
+                {p.category && (
+                  <span className="inline-block text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
+                    {p.category}
+                  </span>
+                )}
                 <div className="text-sm space-y-1 text-gray-600">
                   <div className="flex justify-between">
                     <span>Portionen:</span>
@@ -226,6 +282,16 @@ export default function InventoryPage() {
                     style={{ width: `${(p.portionsRemaining / p.portionsTotal) * 100}%` }}
                   />
                 </div>
+                {(p.freezerInstructions || p.vacuumInstructions) && (
+                  <div className="text-xs text-gray-500 space-y-1 border-t border-gray-100 pt-2">
+                    {p.freezerInstructions && (
+                      <div><span className="font-medium text-gray-600">❄️ TK:</span> {p.freezerInstructions}</div>
+                    )}
+                    {p.vacuumInstructions && (
+                      <div><span className="font-medium text-gray-600">📦 Vakuum:</span> {p.vacuumInstructions}</div>
+                    )}
+                  </div>
+                )}
                 <button
                   onClick={() => handleDelete(p.id, p.name)}
                   className="w-full text-sm text-red-500 hover:text-red-700 py-1.5 border border-red-200 hover:bg-red-50 rounded-lg"

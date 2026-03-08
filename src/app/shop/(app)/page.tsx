@@ -4,11 +4,14 @@ import { useState, useEffect } from "react";
 interface FinishedProduct {
   id: number;
   name: string;
+  category: string | null;
   portionsTotal: number;
   portionsRemaining: number;
   storageType: string;
   bestBefore: string;
   pricePerPortion: number;
+  freezerInstructions: string | null;
+  vacuumInstructions: string | null;
 }
 
 interface CartItem {
@@ -26,6 +29,7 @@ export default function ShopPage() {
   const [purchasing, setPurchasing] = useState(false);
   const [ordered, setOrdered] = useState(false);
   const [error, setError] = useState("");
+  const [search, setSearch] = useState("");
 
   async function load() {
     const res = await fetch("/api/finished-products");
@@ -110,8 +114,15 @@ export default function ShopPage() {
     }
   }
 
-  const available = products.filter((p) => p.portionsRemaining > 0);
-  const unavailable = products.filter((p) => p.portionsRemaining === 0);
+  const filteredProducts = products.filter((p) => {
+    const q = search.toLowerCase();
+    return (
+      p.name.toLowerCase().includes(q) ||
+      (p.category?.toLowerCase().includes(q) ?? false)
+    );
+  });
+  const available = filteredProducts.filter((p) => p.portionsRemaining > 0);
+  const unavailable = filteredProducts.filter((p) => p.portionsRemaining === 0);
 
   if (loading) return <div className="text-gray-400 py-8 text-center">Lade...</div>;
 
@@ -213,6 +224,17 @@ export default function ShopPage() {
         <p className="text-sm text-gray-500">Frisch gekocht &amp; eingelagert</p>
       </div>
 
+      {/* Search */}
+      <div>
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Produkte suchen..."
+          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+        />
+      </div>
+
       {available.length === 0 && (
         <div className="bg-white rounded-xl border border-dashed border-gray-300 p-8 text-center text-gray-400">
           Aktuell sind keine Gerichte verfügbar.
@@ -231,6 +253,11 @@ export default function ShopPage() {
               </div>
               <div className="flex-1 min-w-0">
                 <h2 className="font-semibold text-gray-800 truncate">{p.name}</h2>
+                {p.category && (
+                  <span className="inline-block text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full mt-1">
+                    {p.category}
+                  </span>
+                )}
                 <div className="text-sm text-gray-500 mt-1 space-x-3">
                   <span>{p.portionsRemaining} Port. verfügbar</span>
                   <span className={expiring ? "text-amber-600 font-medium" : ""}>
@@ -242,6 +269,16 @@ export default function ShopPage() {
                   €{p.pricePerPortion.toFixed(2)}
                   <span className="text-gray-400 text-sm font-normal"> / Port.</span>
                 </div>
+                {(p.freezerInstructions || p.vacuumInstructions) && (
+                  <div className="mt-2 space-y-1 text-xs text-gray-500 border-t border-gray-100 pt-2">
+                    {p.freezerInstructions && (
+                      <div><span className="font-medium text-gray-600">❄️ TK-Anleitung:</span> {p.freezerInstructions}</div>
+                    )}
+                    {p.vacuumInstructions && (
+                      <div><span className="font-medium text-gray-600">📦 Vakuum-Anleitung:</span> {p.vacuumInstructions}</div>
+                    )}
+                  </div>
+                )}
               </div>
               <div className="flex flex-col items-end gap-2 self-center">
                 {inCart ? (

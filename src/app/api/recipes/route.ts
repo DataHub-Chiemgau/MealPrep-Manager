@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
   if (!(await isAdminAuthenticated())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  const { name, description, servings, instructions, ingredients } = await req.json();
+  const { name, description, category, servings, prepTime, totalTime, instructions, ingredients } = await req.json();
   if (!name || !servings) {
     return NextResponse.json({ error: "Name und Portionen sind Pflichtfelder" }, { status: 400 });
   }
@@ -26,7 +26,10 @@ export async function POST(req: NextRequest) {
     data: {
       name,
       description,
+      category: category || null,
       servings: Number(servings),
+      prepTime: prepTime ? Number(prepTime) : null,
+      totalTime: totalTime ? Number(totalTime) : null,
       instructions,
       ingredients: {
         create: (ingredients ?? []).map((i: { ingredientId: number; quantity: number }) => ({

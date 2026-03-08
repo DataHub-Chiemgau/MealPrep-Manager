@@ -21,11 +21,26 @@ interface RecipeFormProps {
     id?: number;
     name: string;
     description: string;
+    category: string;
     servings: number;
+    prepTime: number | null;
+    totalTime: number | null;
     instructions: string;
     ingredients: RecipeIngredientRow[];
   };
 }
+
+const RECIPE_CATEGORIES = [
+  "Hauptgericht",
+  "Beilage",
+  "Suppe",
+  "Salat",
+  "Dessert",
+  "Snack",
+  "Frühstück",
+  "Getränk",
+  "Sonstiges",
+];
 
 export default function RecipeForm({ ingredients, initialData }: RecipeFormProps) {
   const router = useRouter();
@@ -33,7 +48,10 @@ export default function RecipeForm({ ingredients, initialData }: RecipeFormProps
 
   const [name, setName] = useState(initialData?.name ?? "");
   const [description, setDescription] = useState(initialData?.description ?? "");
+  const [category, setCategory] = useState(initialData?.category ?? "");
   const [servings, setServings] = useState(initialData?.servings ?? 4);
+  const [prepTime, setPrepTime] = useState<number | "">(initialData?.prepTime ?? "");
+  const [totalTime, setTotalTime] = useState<number | "">(initialData?.totalTime ?? "");
   const [instructions, setInstructions] = useState(initialData?.instructions ?? "");
   const [recipeIngredients, setRecipeIngredients] = useState<RecipeIngredientRow[]>(
     initialData?.ingredients ?? []
@@ -73,7 +91,16 @@ export default function RecipeForm({ ingredients, initialData }: RecipeFormProps
     e.preventDefault();
     setLoading(true);
     setError("");
-    const body = { name, description, servings, instructions, ingredients: recipeIngredients };
+    const body = {
+      name,
+      description,
+      category,
+      servings,
+      prepTime: prepTime === "" ? null : prepTime,
+      totalTime: totalTime === "" ? null : totalTime,
+      instructions,
+      ingredients: recipeIngredients,
+    };
     const url = isEdit ? `/api/recipes/${initialData!.id}` : "/api/recipes";
     const method = isEdit ? "PUT" : "POST";
     const res = await fetch(url, {
@@ -122,6 +149,19 @@ export default function RecipeForm({ ingredients, initialData }: RecipeFormProps
           />
         </div>
         <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Kategorie</label>
+          <select
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          >
+            <option value="">Keine Kategorie</option>
+            {RECIPE_CATEGORIES.map((c) => (
+              <option key={c} value={c}>{c}</option>
+            ))}
+          </select>
+        </div>
+        <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Portionen *</label>
           <input
             type="number"
@@ -131,6 +171,30 @@ export default function RecipeForm({ ingredients, initialData }: RecipeFormProps
             required
             className="w-32 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
           />
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Arbeitszeit (Min.)</label>
+            <input
+              type="number"
+              min={0}
+              value={prepTime}
+              onChange={(e) => setPrepTime(e.target.value === "" ? "" : Number(e.target.value))}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              placeholder="z.B. 30"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Gesamtzeit (Min.)</label>
+            <input
+              type="number"
+              min={0}
+              value={totalTime}
+              onChange={(e) => setTotalTime(e.target.value === "" ? "" : Number(e.target.value))}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              placeholder="z.B. 60"
+            />
+          </div>
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Zubereitung</label>
