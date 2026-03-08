@@ -17,7 +17,7 @@ sudo ./install.sh
 After installation, edit the environment file and set strong secrets:
 
 ```bash
-sudo -u mealprep nano /root/MealPrep-Manager/.env   # adjust path as needed
+sudo -u mealprep nano MealPrep-Manager/.env
 # Set ADMIN_PASSWORD and SHOP_PIN, then restart:
 sudo -u mealprep pm2 restart mealprep-manager
 ```
