@@ -119,90 +119,95 @@ export default function RecipeForm({ ingredients, initialData }: RecipeFormProps
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl">
+    <form onSubmit={handleSubmit} className="space-y-6 max-w-6xl">
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 text-sm">
           {error}
         </div>
       )}
 
-      <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
-        <h2 className="font-semibold text-gray-700">Grunddaten</h2>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            placeholder="z.B. Hähnchen-Curry"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Beschreibung</label>
-          <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            rows={2}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            placeholder="Kurze Beschreibung..."
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Kategorie</label>
-          <select
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-          >
-            <option value="">Keine Kategorie</option>
-            {RECIPE_CATEGORIES.map((c) => (
-              <option key={c} value={c}>{c}</option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Portionen *</label>
-          <input
-            type="number"
-            min={1}
-            value={servings}
-            onChange={(e) => setServings(Number(e.target.value))}
-            required
-            className="w-32 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-          />
-        </div>
-        <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Left column: Grunddaten */}
+        <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
+          <h2 className="font-semibold text-gray-700">Grunddaten</h2>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Arbeitszeit (Min.)</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
             <input
-              type="number"
-              min={0}
-              value={prepTime}
-              onChange={(e) => setPrepTime(e.target.value === "" ? "" : Number(e.target.value))}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-              placeholder="z.B. 30"
+              placeholder="z.B. Hähnchen-Curry"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Gesamtzeit (Min.)</label>
-            <input
-              type="number"
-              min={0}
-              value={totalTime}
-              onChange={(e) => setTotalTime(e.target.value === "" ? "" : Number(e.target.value))}
+            <label className="block text-sm font-medium text-gray-700 mb-1">Beschreibung</label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={2}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-              placeholder="z.B. 60"
+              placeholder="Kurze Beschreibung..."
             />
           </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Kategorie</label>
+            <select
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            >
+              <option value="">Keine Kategorie</option>
+              {RECIPE_CATEGORIES.map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Portionen *</label>
+            <input
+              type="number"
+              min={1}
+              value={servings}
+              onChange={(e) => setServings(Number(e.target.value))}
+              required
+              className="w-32 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Arbeitszeit (Min.)</label>
+              <input
+                type="number"
+                min={0}
+                value={prepTime}
+                onChange={(e) => setPrepTime(e.target.value === "" ? "" : Number(e.target.value))}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                placeholder="z.B. 30"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Gesamtzeit (Min.)</label>
+              <input
+                type="number"
+                min={0}
+                value={totalTime}
+                onChange={(e) => setTotalTime(e.target.value === "" ? "" : Number(e.target.value))}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                placeholder="z.B. 60"
+              />
+            </div>
+          </div>
         </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Zubereitung</label>
+
+        {/* Right column: Zubereitung */}
+        <div className="bg-white rounded-xl border border-gray-200 p-5 flex flex-col">
+          <h2 className="font-semibold text-gray-700 mb-3">Zubereitung</h2>
           <textarea
             value={instructions}
             onChange={(e) => setInstructions(e.target.value)}
-            rows={4}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            rows={14}
+            className="w-full flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 min-h-[300px]"
             placeholder="Schritt-für-Schritt Anleitung..."
           />
         </div>

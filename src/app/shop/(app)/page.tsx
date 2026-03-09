@@ -1,6 +1,24 @@
 "use client";
 import { useState, useEffect } from "react";
 
+interface RecipeIngredientInfo {
+  id: number;
+  quantity: number;
+  ingredient: {
+    id: number;
+    name: string;
+    unit: string;
+  };
+}
+
+interface RecipeInfo {
+  id: number;
+  name: string;
+  description: string | null;
+  instructions: string | null;
+  ingredients: RecipeIngredientInfo[];
+}
+
 interface FinishedProduct {
   id: number;
   name: string;
@@ -12,6 +30,7 @@ interface FinishedProduct {
   pricePerPortion: number;
   freezerInstructions: string | null;
   vacuumInstructions: string | null;
+  recipe: RecipeInfo | null;
 }
 
 interface CartItem {
@@ -30,6 +49,7 @@ export default function ShopPage() {
   const [ordered, setOrdered] = useState(false);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
+  const [expandedProduct, setExpandedProduct] = useState<number | null>(null);
 
   async function load() {
     const res = await fetch("/api/finished-products");
@@ -246,56 +266,93 @@ export default function ShopPage() {
           const inCart = cart.find((c) => c.product.id === p.id);
           const expiring =
             new Date(p.bestBefore).getTime() - Date.now() < 1000 * 60 * 60 * 24 * 3;
+          const isExpanded = expandedProduct === p.id;
+          const hasRecipeDetails = p.recipe && ((p.recipe.ingredients && p.recipe.ingredients.length > 0) || p.recipe.instructions);
           return (
-            <div key={p.id} className="bg-white rounded-xl border border-gray-200 p-4 flex gap-3 shadow-sm">
-              <div className="text-3xl self-start mt-1">
-                {p.storageType === "FREEZER" ? "❄️" : "🧊"}
-              </div>
-              <div className="flex-1 min-w-0">
-                <h2 className="font-semibold text-gray-800 truncate">{p.name}</h2>
-                {p.category && (
-                  <span className="inline-block text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full mt-1">
-                    {p.category}
-                  </span>
-                )}
-                <div className="text-sm text-gray-500 mt-1 space-x-3">
-                  <span>{p.portionsRemaining} Port. verfügbar</span>
-                  <span className={expiring ? "text-amber-600 font-medium" : ""}>
-                    MHD: {new Date(p.bestBefore).toLocaleDateString("de-DE")}
-                    {expiring && " ⚠️"}
-                  </span>
+            <div key={p.id} className="bg-white rounded-xl border border-gray-200 shadow-sm">
+              <div className="p-4 flex gap-3">
+                <div className="text-3xl self-start mt-1">
+                  {p.storageType === "FREEZER" ? "❄️" : "🧊"}
                 </div>
-                <div className="text-emerald-700 font-bold text-lg mt-1">
-                  €{p.pricePerPortion.toFixed(2)}
-                  <span className="text-gray-400 text-sm font-normal"> / Port.</span>
+                <div className="flex-1 min-w-0">
+                  <h2 className="font-semibold text-gray-800 truncate">{p.name}</h2>
+                  {p.category && (
+                    <span className="inline-block text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full mt-1">
+                      {p.category}
+                    </span>
+                  )}
+                  {p.recipe?.description && (
+                    <p className="text-sm text-gray-500 mt-1">{p.recipe.description}</p>
+                  )}
+                  <div className="text-sm text-gray-500 mt-1 space-x-3">
+                    <span>{p.portionsRemaining} Port. verfügbar</span>
+                    <span className={expiring ? "text-amber-600 font-medium" : ""}>
+                      MHD: {new Date(p.bestBefore).toLocaleDateString("de-DE")}
+                      {expiring && " ⚠️"}
+                    </span>
+                  </div>
+                  <div className="text-emerald-700 font-bold text-lg mt-1">
+                    €{p.pricePerPortion.toFixed(2)}
+                    <span className="text-gray-400 text-sm font-normal"> / Port.</span>
+                  </div>
+                  {(p.freezerInstructions || p.vacuumInstructions) && (
+                    <div className="mt-2 space-y-1 text-xs text-gray-500 border-t border-gray-100 pt-2">
+                      {p.freezerInstructions && (
+                        <div><span className="font-medium text-gray-600">❄️ TK-Anleitung:</span> {p.freezerInstructions}</div>
+                      )}
+                      {p.vacuumInstructions && (
+                        <div><span className="font-medium text-gray-600">📦 Vakuum-Anleitung:</span> {p.vacuumInstructions}</div>
+                      )}
+                    </div>
+                  )}
+                  {hasRecipeDetails && (
+                    <button
+                      onClick={() => setExpandedProduct(isExpanded ? null : p.id)}
+                      className="mt-2 text-sm text-emerald-600 hover:text-emerald-700 font-medium"
+                    >
+                      {isExpanded ? "▲ Rezept ausblenden" : "▼ Rezept anzeigen"}
+                    </button>
+                  )}
                 </div>
-                {(p.freezerInstructions || p.vacuumInstructions) && (
-                  <div className="mt-2 space-y-1 text-xs text-gray-500 border-t border-gray-100 pt-2">
-                    {p.freezerInstructions && (
-                      <div><span className="font-medium text-gray-600">❄️ TK-Anleitung:</span> {p.freezerInstructions}</div>
-                    )}
-                    {p.vacuumInstructions && (
-                      <div><span className="font-medium text-gray-600">📦 Vakuum-Anleitung:</span> {p.vacuumInstructions}</div>
-                    )}
-                  </div>
-                )}
+                <div className="flex flex-col items-end gap-2 self-center">
+                  {inCart ? (
+                    <div className="flex items-center gap-2">
+                      <button onClick={() => changeQty(p.id, -1)} className="w-8 h-8 rounded-full bg-gray-100 font-bold">−</button>
+                      <span className="font-semibold">{inCart.quantity}</span>
+                      <button onClick={() => changeQty(p.id, 1)} className="w-8 h-8 rounded-full bg-gray-100 font-bold">+</button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => addToCart(p)}
+                      className="bg-emerald-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-emerald-700 whitespace-nowrap"
+                    >
+                      + Warenkorb
+                    </button>
+                  )}
+                </div>
               </div>
-              <div className="flex flex-col items-end gap-2 self-center">
-                {inCart ? (
-                  <div className="flex items-center gap-2">
-                    <button onClick={() => changeQty(p.id, -1)} className="w-8 h-8 rounded-full bg-gray-100 font-bold">−</button>
-                    <span className="font-semibold">{inCart.quantity}</span>
-                    <button onClick={() => changeQty(p.id, 1)} className="w-8 h-8 rounded-full bg-gray-100 font-bold">+</button>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => addToCart(p)}
-                    className="bg-emerald-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-emerald-700 whitespace-nowrap"
-                  >
-                    + Warenkorb
-                  </button>
-                )}
-              </div>
+              {isExpanded && p.recipe && (
+                <div className="border-t border-gray-100 px-4 pb-4 pt-3 space-y-3">
+                  {p.recipe.ingredients && p.recipe.ingredients.length > 0 && (
+                    <div>
+                      <h3 className="text-sm font-semibold text-gray-700 mb-1">🥗 Zutaten</h3>
+                      <ul className="list-disc list-inside text-sm text-gray-600 space-y-0.5">
+                        {p.recipe.ingredients.map((ri) => (
+                          <li key={ri.id}>
+                            {ri.quantity} {ri.ingredient.unit} {ri.ingredient.name}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {p.recipe.instructions && (
+                    <div>
+                      <h3 className="text-sm font-semibold text-gray-700 mb-1">📋 Zubereitung</h3>
+                      <p className="text-sm text-gray-600 whitespace-pre-line">{p.recipe.instructions}</p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           );
         })}
