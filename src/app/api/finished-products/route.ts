@@ -7,7 +7,15 @@ import { PRICE_MARKUP } from "@/lib/pricing";
 export async function GET() {
   const products = await prisma.finishedProduct.findMany({
     where: { portionsRemaining: { gte: 0 } },
-    include: { recipe: true },
+    include: {
+      recipe: {
+        include: {
+          ingredients: {
+            include: { ingredient: true },
+          },
+        },
+      },
+    },
     orderBy: { bestBefore: "asc" },
   });
   return NextResponse.json(products);
