@@ -236,6 +236,9 @@ ufw status verbose
 # =============================================================================
 # Done
 # =============================================================================
+SERVER_IP=$(hostname -I 2>/dev/null | awk '{print $1}')
+SERVER_IP="${SERVER_IP:-<server-ip>}"
+
 echo ""
 echo -e "${GREEN}========================================================${NC}"
 echo -e "${GREEN}  MealPrep Manager installed successfully!             ${NC}"
@@ -244,10 +247,12 @@ echo ""
 echo "  Application directory : ${APP_DIR}"
 echo "  Application user      : ${APP_USER}"
 echo "  PM2 app name          : ${PM2_APP_NAME}"
-echo "  Listening on          : http://0.0.0.0 (Nginx -> port ${APP_PORT})"
+echo "  Environment file      : ${APP_DIR}/.env"
+echo ""
+echo -e "  ${GREEN}Open in your browser:  http://${SERVER_IP}${NC}"
 echo ""
 warn "Don't forget to:"
-warn "  1. Edit ${APP_DIR}/.env and set strong ADMIN_PASSWORD and SHOP_PIN."
+warn "  1. If you did not set custom values during installation, edit ${APP_DIR}/.env and set strong ADMIN_PASSWORD and SHOP_PIN."
 warn "  2. Restart the app after changing .env:  sudo -u ${APP_USER} pm2 restart ${PM2_APP_NAME}"
 warn "  3. Set up HTTPS with Certbot for production use:"
 warn "       apt install certbot python3-certbot-nginx"
