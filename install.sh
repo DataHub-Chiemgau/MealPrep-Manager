@@ -185,6 +185,16 @@ systemctl enable "pm2-${APP_USER}"
 info "Configuring Nginx as reverse proxy (port 80 -> ${APP_PORT})..."
 
 NGINX_CONF="/etc/nginx/sites-available/${NGINX_SITE}"
+
+# WebSocket upgrade map — must live in the http {} context.
+# Place it in conf.d/ so it is included by the default nginx.conf.
+cat > /etc/nginx/conf.d/websocket-upgrade.conf << 'MAP_EOF'
+map $http_upgrade $connection_upgrade {
+    default upgrade;
+    ''      close;
+}
+MAP_EOF
+
 cat > "${NGINX_CONF}" << NGINX_EOF
 server {
     listen 80;
@@ -194,17 +204,16 @@ server {
     # Increase client_max_body_size for receipt image uploads (matches 10 MB app limit)
     client_max_body_size 11M;
 
-    # Recommended proxy headers
-    proxy_http_version 1.1;
-    proxy_set_header   Upgrade           \$http_upgrade;
-    proxy_set_header   Connection        "upgrade";
-    proxy_set_header   Host              \$host;
-    proxy_set_header   X-Real-IP         \$remote_addr;
-    proxy_set_header   X-Forwarded-For   \$proxy_add_x_forwarded_for;
-    proxy_set_header   X-Forwarded-Proto \$scheme;
-
     location / {
         proxy_pass http://127.0.0.1:${APP_PORT};
+
+        proxy_http_version 1.1;
+        proxy_set_header   Upgrade           \$http_upgrade;
+        proxy_set_header   Connection        \$connection_upgrade;
+        proxy_set_header   Host              \$host;
+        proxy_set_header   X-Real-IP         \$remote_addr;
+        proxy_set_header   X-Forwarded-For   \$proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto \$scheme;
     }
 }
 NGINX_EOF
@@ -230,6 +239,9 @@ ufw allow 'Nginx HTTP'
 ufw allow 'Nginx HTTPS'
 ufw --force enable
 
+# Determine server IP addresses for the final status message
+SERVER_IPS=$(hostname -I 2>/dev/null | xargs || echo "unknown")
+
 info "UFW status:"
 ufw status verbose
 
@@ -244,7 +256,8 @@ echo ""
 echo "  Application directory : ${APP_DIR}"
 echo "  Application user      : ${APP_USER}"
 echo "  PM2 app name          : ${PM2_APP_NAME}"
-echo "  Listening on          : http://0.0.0.0 (Nginx -> port ${APP_PORT})"
+echo "  Listening on          : http://<server-ip> (Nginx port 80 -> app port ${APP_PORT})"
+echo "  Server IP(s)          : ${SERVER_IPS}"
 echo ""
 warn "Don't forget to:"
 warn "  1. Edit ${APP_DIR}/.env and set strong ADMIN_PASSWORD and SHOP_PIN."
